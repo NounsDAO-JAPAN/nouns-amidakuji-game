@@ -7,7 +7,7 @@ import hre from 'hardhat';
 
 import { getHardhatSigners } from '~helpers/functions/accounts';
 
-describe('🚩 Challenge 0: 🎟 Simple NFT Example 🤓', function () {
+describe('🚩 Challenge 1: 🎟 Simple NFT Example 🤓', function () {
   this.timeout(180000);
 
   // console.log("hre:",Object.keys(hre)) // <-- you can access the hardhat runtime env here
