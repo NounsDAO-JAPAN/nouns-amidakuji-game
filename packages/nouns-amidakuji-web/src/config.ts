@@ -14,10 +14,10 @@ interface AppConfig {
 }
 
 type SupportedChains =
-  | ChainId.Rinkeby
-  | ChainId.Mainnet
-  | ChainId.Hardhat
-  | ChainId.Goerli;
+  // | ChainId.Rinkeby
+  // | ChainId.Mainnet
+  ChainId.Hardhat;
+// | ChainId.Goerli;
 
 interface CacheBucket {
   name: string;
@@ -43,7 +43,7 @@ export const cacheKey = (
 };
 
 export const CHAIN_ID: SupportedChains = parseInt(
-  process.env.REACT_APP_CHAIN_ID ?? '4'
+  process.env.REACT_APP_CHAIN_ID ?? '31337'
 );
 
 export const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY ?? '';
@@ -61,27 +61,6 @@ export const createNetworkWsUrl = (network: string): string => {
 };
 
 const app: Record<SupportedChains, AppConfig> = {
-  [ChainId.Rinkeby]: {
-    jsonRpcUri: createNetworkHttpUrl('rinkeby'),
-    wsRpcUri: createNetworkWsUrl('rinkeby'),
-    subgraphApiUri:
-      'https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph-rinkeby-v5',
-    enableHistory: process.env.REACT_APP_ENABLE_HISTORY === 'true',
-  },
-  [ChainId.Goerli]: {
-    jsonRpcUri: createNetworkHttpUrl('goerli'),
-    wsRpcUri: createNetworkWsUrl('goerli'),
-    subgraphApiUri:
-      'https://api.thegraph.com/subgraphs/name/bcjgit/dao-v2-test',
-    enableHistory: process.env.REACT_APP_ENABLE_HISTORY === 'true',
-  },
-  [ChainId.Mainnet]: {
-    jsonRpcUri: createNetworkHttpUrl('mainnet'),
-    wsRpcUri: createNetworkWsUrl('mainnet'),
-    subgraphApiUri:
-      'https://api.thegraph.com/subgraphs/name/nounsdao/nouns-subgraph',
-    enableHistory: process.env.REACT_APP_ENABLE_HISTORY === 'true',
-  },
   [ChainId.Hardhat]: {
     jsonRpcUri: 'http://localhost:8545',
     wsRpcUri: 'ws://localhost:8545',
@@ -91,16 +70,17 @@ const app: Record<SupportedChains, AppConfig> = {
   },
 };
 
-const externalAddresses: Record<SupportedChains, ExternalContractAddresses> = {
-  [ChainId.Rinkeby]: {
-    lidoToken: '0xF4242f9d78DB7218Ad72Ee3aE14469DBDE8731eD',
-  },
-  [ChainId.Goerli]: {
-    lidoToken: '0x2DD6530F136D2B56330792D46aF959D9EA62E276',
-  },
-  [ChainId.Mainnet]: {
-    lidoToken: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
-  },
+const externalAddresses = {
+  // const externalAddresses: Record<SupportedChains, ExternalContractAddresses> = {
+  // [ChainId.Rinkeby]: {
+  //   lidoToken: '0xF4242f9d78DB7218Ad72Ee3aE14469DBDE8731eD',
+  // },
+  // [ChainId.Goerli]: {
+  //   lidoToken: '0x2DD6530F136D2B56330792D46aF959D9EA62E276',
+  // },
+  // [ChainId.Mainnet]: {
+  //   lidoToken: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+  // },
   [ChainId.Hardhat]: {
     lidoToken: undefined,
   },

@@ -1,7 +1,6 @@
 import Davatar from '@davatar/react';
 import { useEthers } from '@usedapp/core';
 import React, { useState } from 'react';
-import { useReverseENSLookUp } from '../utils/ensLookup';
 import NavBarButton, {
   getNavBarButtonVariant,
   NavBarButtonStyle,
@@ -28,7 +27,7 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = (props) => {
   const { className, onClickHandler, buttonStyle } = props;
   return (
     <Nav.Link className={className} onClick={onClickHandler}>
-      <NavBarButton buttonStyle={buttonStyle} buttonText={'Connect'} />
+      <NavBarButton buttonStyle={buttonStyle} buttonText="Connect" />
     </Nav.Link>
   );
 };
@@ -57,10 +56,8 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
 
   const [buttonUp, setButtonUp] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const { library: provider } = useEthers();
-  const activeAccount = '0x63f413Cbe3323FaB530f08374C4D5d6d70Fa382A';
-  const { deactivate } = useEthers();
-  const ens = useReverseENSLookUp(address);
+  const { account, library: provider, deactivate } = useEthers();
+  // const ens = useReverseENSLookUp(address);
   const shortAddress = useShortAddress(address);
 
   const setModalStateHandler = (state: boolean) => {
@@ -127,11 +124,11 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
           >
             <div className={navDropdownClasses.button}>
               <div className={classes.icon}>
-                {' '}
-                <Davatar size={21} address={address} provider={provider} />
+                {/*<Davatar size={21} address={address} provider={provider} />*/}
               </div>
               <div className={navDropdownClasses.dropdownBtnContent}>
-                {ens ? ens : shortAddress}
+                {/*{ens ? ens : shortAddress}*/}
+                {shortAddress}
               </div>
               <div
                 className={
@@ -227,11 +224,11 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
           >
             <div className={navDropdownClasses.button}>
               <div className={classes.icon}>
-                {' '}
                 <Davatar size={21} address={address} provider={provider} />
               </div>
               <div className={navDropdownClasses.dropdownBtnContent}>
-                {ens ? renderENS(ens) : renderAddress(address)}
+                {/*{ens ? renderENS(ens) : renderAddress(address)}*/}
+                {renderAddress(address)}
               </div>
             </div>
           </div>
@@ -280,13 +277,13 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
 
   return (
     <>
-      {showConnectModal && activeAccount === undefined && (
+      {showConnectModal && account === undefined && (
         <WalletConnectModal onDismiss={() => setModalStateHandler(false)} />
       )}
-      {activeAccount ? (
+      {account ? (
         <>
           {walletConnectedContentDesktop}
-          {walletConnectedContentMobile}
+          {/*{walletConnectedContentMobile}*/}
         </>
       ) : (
         <WalletConnectButton

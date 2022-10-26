@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typechain:generate": "yarn typechain --target=ethers-v5 ./src/abi/Amidakuji.json --out-dir=./gen/types"
   },
   "dependencies": {
     "@davatar/react": "^1.11.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^6.2.0",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "@typechain/ethers-v5": "^10.1.0",
     "@usedapp/coingecko": "^1.1.5",
     "@usedapp/core": "^1.1.5",
     "@web3-react/core": "^6.1.9",
@@ -29,7 +31,8 @@
     "react": "18.2.0",
     "react-bootstrap": "^2.5.0",
     "react-dom": "18.2.0",
-    "styled-components": "^5.3.6"
+    "styled-components": "^5.3.6",
+    "typechain": "^8.1.0"
   },
   "devDependencies": {
     "@types/bootstrap": "^5",

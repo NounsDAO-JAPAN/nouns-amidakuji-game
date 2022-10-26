@@ -19292,6 +19292,7 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": ^6.2.0
     "@fortawesome/free-solid-svg-icons": ^6.2.0
     "@fortawesome/react-fontawesome": ^0.2.0
+    "@typechain/ethers-v5": ^10.1.0
     "@types/bootstrap": ^5
     "@types/eslint": ^8
     "@types/lingui__macro": ^3
@@ -19321,6 +19322,7 @@ __metadata:
     react-bootstrap: ^2.5.0
     react-dom: 18.2.0
     styled-components: ^5.3.6
+    typechain: ^8.1.0
     typescript: 4.8.4
   languageName: unknown
   linkType: soft

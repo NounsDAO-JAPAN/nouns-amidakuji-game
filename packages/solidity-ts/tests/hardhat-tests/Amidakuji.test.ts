@@ -21,11 +21,18 @@ describe('🚩 Challenge 0: Amidakuji', function () {
     let amidaContract: Amidakuji;
 
     async function setupGame(): Promise<void> {
+      try {
+        await revealGame();
+      } catch (e) {}
       const { user1, user2 } = await getHardhatSigners(hre);
-      await amidaContract.setup(1);
+      await amidaContract.connect(user1).entry(1);
+      await amidaContract.connect(user2).entry(2);
+    }
+
+    async function revealGame(): Promise<void> {
+      await time.increase(time.duration.hours(25));
       const gameId = await amidaContract.currentGameId();
-      await amidaContract.connect(user1).entry(gameId, 1);
-      await amidaContract.connect(user2).entry(gameId, 2);
+      await amidaContract.reveal(gameId);
     }
 
     before(async () => {
@@ -38,51 +45,40 @@ describe('🚩 Challenge 0: Amidakuji', function () {
       // put stuff you need to run before each test here
     });
 
-    describe('setup()', function () {
-      it('Should be able to set a new game', async function () {
-        await amidaContract.setup(1);
-        const gameId = await amidaContract.currentGameId();
-        expect(gameId.toNumber()).to.be.equal(1);
-
-        await amidaContract.setup(2);
-        expect(await amidaContract.currentGameId()).to.be.equal(2);
-      });
-
-      it('Should be able to can call by only owner', async function () {
-        const { deployer, user1 } = await getHardhatSigners(hre);
-        await amidaContract.connect(deployer).setup(1);
-        await expect(amidaContract.connect(user1).setup(2)).to.be.rejected;
-        expect(amidaContract.deployTransaction.from).to.be.equal(deployer.address);
-      });
-    });
-
     describe('entry()', function () {
+      it('Should start a new game if game is not started', async function () {
+        const { user1 } = await getHardhatSigners(hre);
+        const gameId = await amidaContract.currentGameId();
+        expect(gameId.toNumber()).to.be.equal(0);
+
+        await expect(amidaContract.connect(user1).entry(1)).to.be.not.rejected;
+        expect(await amidaContract.currentGameId()).to.be.equal(1);
+        await revealGame();
+      });
+
       it('Should be able to entry a user to the game', async function () {
         const { user1, user2 } = await getHardhatSigners(hre);
+        await expect(amidaContract.connect(user1).entry(1)).to.be.not.rejected;
+        await expect(amidaContract.connect(user2).entry(2)).to.be.not.rejected;
         const gameId = await amidaContract.currentGameId();
-        await expect(amidaContract.connect(user1).entry(gameId, 1)).to.be.not.rejected;
-        await expect(amidaContract.connect(user2).entry(gameId, 2)).to.be.not.rejected;
         const game = await amidaContract.game(gameId);
         expect(game.players.length).to.equal(2);
       });
 
       it('Should be not able to entry a user to the game if pos is already exist', async function () {
         const { user3 } = await getHardhatSigners(hre);
-        const gameId = await amidaContract.currentGameId();
-        await expect(amidaContract.connect(user3).entry(gameId, 1)).to.be.rejected;
+        await expect(amidaContract.connect(user3).entry(1)).to.be.rejected;
       });
 
       it('Should be not able to entry a user to the game from duplicate address', async function () {
         const { user1 } = await getHardhatSigners(hre);
-        const gameId = await amidaContract.currentGameId();
-        await expect(amidaContract.connect(user1).entry(gameId, 3)).to.be.rejected;
+        await expect(amidaContract.connect(user1).entry(3)).to.be.rejected;
       });
 
       it('Should be not able to entry a user to the game if entry time ended', async function () {
         const { user4 } = await getHardhatSigners(hre);
-        const gameId = await amidaContract.currentGameId();
         await time.increase(time.duration.hours(24));
-        await expect(amidaContract.connect(user4).entry(gameId, 4)).to.be.rejected;
+        await expect(amidaContract.connect(user4).entry(4)).to.be.rejected;
       });
     });
 
@@ -124,12 +120,12 @@ describe('🚩 Challenge 0: Amidakuji', function () {
         await expect(amidaContract.reveal(gameId)).to.be.rejected;
       });
 
-      it('Should be not able to reveal if not owner', async function () {
-        const { user1 } = await getHardhatSigners(hre);
-        const gameId = await amidaContract.currentGameId();
-        await time.increase(time.duration.hours(25));
-        await expect(amidaContract.connect(user1).reveal(gameId)).to.be.rejected;
-      });
+      // it('Should be not able to reveal if not owner', async function () {
+      //   const { user1 } = await getHardhatSigners(hre);
+      //   const gameId = await amidaContract.currentGameId();
+      //   await time.increase(time.duration.hours(25));
+      //   await expect(amidaContract.connect(user1).reveal(gameId)).to.be.rejected;
+      // });
 
       it('Should be not able to reveal by owner', async function () {
         const gameId = await amidaContract.currentGameId();
@@ -153,6 +149,8 @@ describe('🚩 Challenge 0: Amidakuji', function () {
         const result = await amidaContract.connect(user1).result(gameId);
         expect(result).to.exist;
       });
+
+      // TODO winnerの計算
     });
 
     describe('game()', function () {

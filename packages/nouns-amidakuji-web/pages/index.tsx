@@ -4,8 +4,60 @@ import Image from 'react-bootstrap/Image';
 import { Col, Container, Row } from 'react-bootstrap';
 import styled from 'styled-components';
 import NavBar from '../src/components/NavBar';
+import { useCall, useContractFunction, useEthers } from '@usedapp/core';
+import { BigNumber, Contract, utils } from 'ethers';
+import { Amidakuji } from '../gen/types';
+import AmidakujiAbi from '../src/abi/Amidakuji.json';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+interface Game {
+  id: BigNumber;
+  startTime: BigNumber;
+  drawingStartTime: BigNumber;
+  endTime: BigNumber;
+  players: string[];
+}
+
+function useLatestGame(contract: Contract, address?: string): Game | undefined {
+  const [id, setId] = useState<BigNumber>();
+  useEffect(() => {
+    (contract as Amidakuji).currentGameId().then((id) => {
+      setId(id);
+    });
+  }, [contract]);
+
+  const { value, error } =
+    useCall(address && id && { contract, method: 'game', args: [id] }) ?? {};
+  if (error) {
+    console.error(error.message);
+    return undefined;
+  }
+
+  return { ...value?.[0] };
+}
 
 const Home: NextPage = () => {
+  const { account, library: provider } = useEthers();
+
+  const contract = useMemo(() => {
+    const Interface = new utils.Interface(AmidakujiAbi.abi);
+    return new Contract(
+      '0x63fea6E447F120B8Faf85B53cdaD8348e645D80E',
+      Interface,
+      provider?.getSigner()
+    ) as Amidakuji;
+  }, [provider]);
+
+  const game = useLatestGame(contract, account);
+  const { send: entry } = useContractFunction(contract, 'entry');
+
+  const onEntry = useCallback(
+    async (pos: number) => {
+      await entry(pos);
+    },
+    [entry]
+  );
+
   return (
     <div>
       <Head>
@@ -47,53 +99,36 @@ const Home: NextPage = () => {
                       </AuctionActivityNounTitle>
                     </Col>
                   </ActivityRow>
-                  <ActivityRow>Mock Data</ActivityRow>
+                  <ActivityRow>
+                    <div>
+                      <input type="text" />
+                      <button onClick={() => onEntry(1)}>Entry</button>
+                    </div>
+                  </ActivityRow>
+                  <ActivityRow>
+                    <div>
+                      <input type="text" />
+                      <button onClick={() => onEntry(1)}>Draw</button>
+                    </div>
+                  </ActivityRow>
+                  <ActivityRow>
+                    <div>
+                      <input type="text" />
+                      <button onClick={() => onEntry(1)}>Reveal</button>
+                    </div>
+                  </ActivityRow>
+                  <ActivityRow style={{ marginTop: 16 }}>
+                    Current Game
+                  </ActivityRow>
+                  <ActivityRow>GameId: {game?.id?.toNumber()}</ActivityRow>
+                  <ActivityRow>players: {game?.players?.join(',')}</ActivityRow>
+                  <ActivityRow>
+                    startTime: {game?.startTime?.toNumber()}
+                  </ActivityRow>
+                  <ActivityRow>
+                    endTime: {game?.endTime?.toNumber()}
+                  </ActivityRow>
                 </InformationRow>
-                <ActivityRow>
-                  {/*<Col lg={12}>*/}
-                  {/*  <BidCollection className={auctionBidClasses.bidCollection}>*/}
-                  {/*    <li*/}
-                  {/*      className={*/}
-                  {/*        (isCool*/}
-                  {/*          ? `${auctionBidClasses.bidRowCool}`*/}
-                  {/*          : `${auctionBidClasses.bidRowWarm}`) +*/}
-                  {/*        ` ${nounContentClasses.bidRow}`*/}
-                  {/*      }*/}
-                  {/*    >*/}
-                  {/*      <Trans>All Noun auction proceeds are sent to the</Trans>{' '}*/}
-                  {/*      <Link to="/vote" className={nounContentClasses.link}>*/}
-                  {/*        <Trans>Nouns DAO</Trans>*/}
-                  {/*      </Link>*/}
-                  {/*      .{' '}*/}
-                  {/*      <Trans>*/}
-                  {/*        For this reason, we, the project's founders*/}
-                  {/*        (‘Nounders’) have chosen to compensate ourselves with*/}
-                  {/*        Nouns. Every 10th Noun for the first 5 years of the*/}
-                  {/*        project will be sent to our multisig (5/10), where it*/}
-                  {/*        will be vested and distributed to individual Nounders.*/}
-                  {/*      </Trans>*/}
-                  {/*    </li>*/}
-                  {/*  </BidCollection>*/}
-                  {/*  <div*/}
-                  {/*    className={*/}
-                  {/*      isCool*/}
-                  {/*        ? bidBtnClasses.bidHistoryWrapperCool*/}
-                  {/*        : bidBtnClasses.bidHistoryWrapperWarm*/}
-                  {/*    }*/}
-                  {/*  >*/}
-                  {/*    <Link*/}
-                  {/*      to="/nounders"*/}
-                  {/*      className={*/}
-                  {/*        isCool*/}
-                  {/*          ? bidBtnClasses.bidHistoryCool*/}
-                  {/*          : bidBtnClasses.bidHistoryWarm*/}
-                  {/*      }*/}
-                  {/*    >*/}
-                  {/*      <Trans>Learn more</Trans> →*/}
-                  {/*    </Link>*/}
-                  {/*  </div>*/}
-                  {/*</Col>*/}
-                </ActivityRow>
               </AuctionActivityWrapper>
             </AuctionActivityCol>
           </Row>
@@ -105,7 +140,7 @@ const Home: NextPage = () => {
             <Col lg={6}>
               <BannerWrapper>
                 <h1>
-                  ONE NOUN,
+                  ONE GAME,
                   <br />
                   EVERY DAY,
                   <br />

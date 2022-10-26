@@ -2,26 +2,27 @@ import { Navbar, Container } from 'react-bootstrap';
 import NavWallet from './NavWallet';
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useEthers } from '@usedapp/core';
 
 const NavBar = () => {
-  const activeAccount = '0x63f413Cbe3323FaB530f08374C4D5d6d70Fa382A';
+  const { account } = useEthers();
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
   return (
     <>
       <NavBarCustom expand="xl" expanded={isNavExpanded}>
         <Container style={{ maxWidth: 'unset' }}>
-          <BrandAndTreasuryWrapper>
-            <NavBarBrand to="/">
-              <NavBarLogo src={'/logo.svg'} alt="Nouns DAO logo" />
-            </NavBarBrand>
-          </BrandAndTreasuryWrapper>
+          {/*<BrandAndTreasuryWrapper>*/}
+          {/*  <NavBarBrand to="/">*/}
+          {/*    <NavBarLogo src={'/logo.svg'} alt="Nouns DAO logo" />*/}
+          {/*  </NavBarBrand>*/}
+          {/*</BrandAndTreasuryWrapper>*/}
           <NavBarToggle
             aria-controls="basic-navbar-nav"
             onClick={() => setIsNavExpanded(!isNavExpanded)}
           />
           <Navbar.Collapse className="justify-content-end">
-            <NavWallet address={activeAccount || '0'} buttonStyle={4} />
+            <NavWallet address={account || '0'} buttonStyle={4} />
           </Navbar.Collapse>
         </Container>
       </NavBarCustom>
