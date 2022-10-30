@@ -2,106 +2,136 @@ pragma solidity >=0.8.0 <0.9.0;
 //SPDX-License-Identifier: MIT
 
 import "hardhat/console.sol";
-// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import "./StringUtils.sol";
 
 contract Amidakuji is Ownable {
-  uint256 public currentGameId;
-  uint256 public entryTimeDuration = 1 days;
-  uint256 public drawTimeDuration = 10 minutes;
+  using StringUtils for string;
 
-  // TODO uint256 を最適化
-  struct Game {
-    uint256 id;
+  uint32 public currentGameId;
+  uint256 public baseStartTime;
+  uint256 public startTimeDuration = 1 days; // 86400s
+
+  struct PrivateGame {
+    uint32 id;
     uint256 startTime;
-    uint256 maxPlayerCount;
-    uint256 atariPos;
+    uint8 atariPosition; // A->1 ~ F->6
     address[] players;
-    uint256[] playersPos;
-    uint256[] lines;
-    bool isHeld;
+    uint8[] playerPositions; // playersと同じindexに格納
+    string[] playerNames; // playersと同じindexに格納
+    address[] linePlayers;
+    uint8[] linesX; // linePlayersと同じindexに格納
+    uint8[] linesY; // linePlayersと同じindexに格納
   }
 
-  struct BeforeRevealGame {
-    uint256 id;
+  struct PublicGame {
+    uint32 id;
     uint256 startTime;
-    uint256 drawingStartTime;
-    uint256 endTime;
     address[] players;
+    string[] playerNames;
+    uint8[] myLinesX;
+    uint8[] myLinesY;
   }
 
-  struct AfterRevealGame {
-    uint256 id;
+  struct ResultGame {
+    uint32 id;
     uint256 startTime;
-    uint256 endTime;
-    uint256 atariPos;
+    uint8 atariPosition;
     address winner;
     address[] players;
-    uint256[] playersPos;
-    uint256[] lines;
+    string[] playerNames;
+    uint8[] myLinesX;
+    uint8[] myLinesY;
+    bool[6][] map;
   }
 
-  mapping(uint256 => Game) private _games;
+  mapping(uint256 => PrivateGame) private _games;
 
   constructor() {
     currentGameId = 0;
+    baseStartTime = 1667088000; // 2022-10-30 09:00:00 (JST)
   }
 
-  function _indexOf(uint256[] memory arr, uint256 searchFor) private pure returns (uint256) {
-    for (uint256 i = 0; i < arr.length; i++) {
-      if (arr[i] == searchFor) {
-        return i;
-      }
-    }
-    revert("Not found");
-  }
-
-  // TODO oracleを使った方が安全
   function _randMod(uint256 _nonce, uint256 _modulus) private view returns (uint256) {
     return uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, _nonce))) % _modulus;
   }
 
   // _setup (by first entry): ゲームの初期設定。あたりの場所をprivate変数に格納
   function _setup(uint256 _nonce) private returns (uint256) {
-    currentGameId++;
-    uint256 startTime = block.timestamp;
-    address[] memory players;
-    uint256[] memory playersPos;
-    uint256[] memory lines;
+    uint256 beforeGameStartTime = _games[currentGameId].startTime;
+    if (beforeGameStartTime == 0) {
+      beforeGameStartTime = baseStartTime;
+    }
 
-    Game memory newGame = Game({
-      id: currentGameId,
-      startTime: startTime,
-      maxPlayerCount: 6, // TODO 一旦6人まで
-      atariPos: _randMod(_nonce, 6), // TODO 一旦AからFまで。 A:0 ~ F:5
-      players: players,
-      playersPos: playersPos,
-      lines: lines,
-      isHeld: true
-    });
-
-    _games[currentGameId] = newGame;
-    return newGame.id;
-  }
-
-  function _calcWinner(uint256 _id) private view returns (address) {
-    uint256 currentPos = _games[_id].atariPos;
-    address winner;
-
-    // 配列の後ろから逆算していく
-    for (uint256 i = _games[_id].lines.length - 1; i >= 0; i--) {
-      if (_games[_id].lines[i] == currentPos) {
-        // 右へ移動
-        currentPos = currentPos + 1;
-      } else if (_games[_id].lines[i] + 1 == currentPos) {
-        // 左へ移動
-        currentPos = currentPos - 1;
+    // 前回の開始日からの日付差分
+    // 暫定で30年間プレイされなくても大丈夫
+    uint256 beforeGameDiffDate;
+    for (uint256 i = 1; i < 10000; i++) {
+      if (beforeGameStartTime + (startTimeDuration * i + 1) > block.timestamp) {
+        beforeGameDiffDate = i;
+        break;
       }
     }
 
-    for (uint256 i = 0; i < _games[_id].playersPos.length; i++) {
-      if (_games[_id].playersPos[i] == currentPos) {
-        // playersPosとplayersの配列の添字は紐づいている
+    currentGameId++;
+    _games[currentGameId].id = currentGameId;
+    // YYYY/MM/DD 09:00:00(JST)
+    _games[currentGameId].startTime = beforeGameStartTime + (beforeGameDiffDate * startTimeDuration);
+    _games[currentGameId].atariPosition = uint8(_randMod(_nonce, 6) + 1);
+
+    return currentGameId;
+  }
+
+  function _myLines(uint32 _id) private view returns (uint8[] memory, uint8[] memory) {
+    uint8[] memory myLinesX = new uint8[](2);
+    uint8[] memory myLinesY = new uint8[](2);
+
+    uint8 count = 0;
+    for (uint256 i = 0; i < _games[_id].linePlayers.length; i++) {
+      if (_games[_id].linePlayers[i] == msg.sender) {
+        myLinesX[count] = _games[_id].linesX[i];
+        myLinesY[count] = _games[_id].linesY[i];
+        count++;
+      }
+    }
+
+    return (myLinesX, myLinesY);
+  }
+
+  function _lineToMap(uint256 _id) private view returns (bool[6][] memory) {
+    bool[6][] memory map = new bool[6][](12);
+
+    // mapping
+    for (uint256 i = 0; i < _games[_id].linePlayers.length; i++) {
+      uint8 lineX = _games[_id].linesX[i];
+      uint8 lineY = _games[_id].linesY[i];
+      map[lineX - 1][lineY - 1] = true;
+    }
+
+    return map;
+  }
+
+  function _calcWinner(uint256 _id) private view returns (address) {
+    uint256 currentPos = _games[_id].atariPosition;
+    address winner;
+    bool[6][] memory map = _lineToMap(_id);
+
+    // 配列の後ろから逆算していく
+    for (uint256 i = 12; i > 0; i--) {
+      if (map[currentPos - 1][i - 1] == true) {
+        if ((currentPos % 2 == 0 && i % 2 == 0) || (currentPos % 2 == 1 && i % 2 == 1)) {
+          // x,yが偶数同士もしくは奇数同士だと右移動
+          currentPos = currentPos + 1;
+        } else {
+          // 左へ移動
+          currentPos = currentPos - 1;
+        }
+      }
+    }
+
+    for (uint256 i = 0; i < _games[_id].playerPositions.length; i++) {
+      if (_games[_id].playerPositions[i] == currentPos) {
+        // playerPositionsとplayersの配列の添字は紐づいている
         winner = _games[_id].players[i];
       }
     }
@@ -110,18 +140,12 @@ contract Amidakuji is Ownable {
   }
 
   // entry: ゲームへのエントリー（ゲームが開催されてなかったら作成される）
-  // 3文字で名前を一緒に入力
-  function entry(uint32 _pos) public returns (bool) {
+  function entry(string memory _name, uint8 _pos) public returns (bool) {
     uint256 gameId = currentGameId;
-    if (_games[currentGameId].isHeld == false) {
-      // 基準時間方針にする JST AM9:00 PST PM5:00
-      // 24h
-      // ギリギリ参加勢も許容
-      // 自分の位置
+
+    if (_games[gameId].startTime + 1 days < block.timestamp) {
       gameId = _setup(uint256(keccak256(abi.encodePacked(block.timestamp))));
     }
-
-    require(_games[gameId].startTime + entryTimeDuration > block.timestamp, "Ended entry time");
 
     // 重複参加のチェック
     for (uint256 i = 0; i < _games[gameId].players.length; i++) {
@@ -129,73 +153,92 @@ contract Amidakuji is Ownable {
     }
 
     // ポジションの重複チェック
-    for (uint256 i = 0; i < _games[gameId].playersPos.length; i++) {
-      require(_games[gameId].playersPos[i] != _pos, "Already pos exists");
+    for (uint256 i = 0; i < _games[gameId].playerPositions.length; i++) {
+      require(_games[gameId].playerPositions[i] != _pos, "Already pos exists");
     }
 
+    // name check
+    require(_name.strlen() >= 0 && _name.strlen() <= 3, "Name is invalid");
+
     _games[gameId].players.push(msg.sender);
-    _games[gameId].playersPos.push(_pos);
+    _games[gameId].playerPositions.push(_pos);
+    _games[gameId].playerNames.push(_name);
     return true; // succeed
   }
 
-  // draw: 線を引く。private領域へ情報を格納。参加人数と同じ回数線を引ける。
-  // TODO 誰がどこに弾いたかを見れるようにする？
-  // 一律一人２本引ける
-  // A,C,E と 1~12奇数, B,D,Fが 2~12 の偶数
-  function draw(uint256 _id, uint256 startPos) public returns (bool) {
-    require(_games[_id].startTime + entryTimeDuration < block.timestamp, "Not Started drawing time");
-    require(_games[_id].startTime + entryTimeDuration + drawTimeDuration > block.timestamp, "Ended drawing time");
+  // draw: 線を引く。private領域へ情報を格納。1人２本引ける
+  // xStartPosはA,C,Eが1~12の奇数, B,Dが2~12の偶数
+  function draw(uint8 xStartPos, uint8 y) public returns (bool) {
+    uint32 gameId = currentGameId;
+    require(_games[gameId].startTime + startTimeDuration > block.timestamp, "Game is not started");
 
-    // 参加者チェック
+    // 参加チェック
     bool canDraw = false;
-    for (uint256 i = 0; i < _games[_id].players.length; i++) {
-      if (_games[_id].players[i] == msg.sender) {
+    for (uint256 i = 0; i < _games[gameId].players.length; i++) {
+      if (_games[gameId].players[i] == msg.sender) {
         canDraw = true;
       }
     }
     require(canDraw, "Does not entry");
 
-    require(startPos >= 0 && startPos <= 5, "Invalid Position"); // TODO 一旦 A:0 ~ E:4 をマッピング
-    _games[_id].lines.push(startPos);
+    // A:1 ~ E:5
+    require(xStartPos >= 1 && xStartPos <= 5, "Invalid x Position");
+    require(y >= 1 && y <= 12, "Invalid y Position");
+
+    // 奇数偶数チェック
+    // A,C,E
+    if (xStartPos == 1 || xStartPos == 3 || xStartPos == 5) {
+      require(y % 2 == 1, "Invalid y position");
+    } else {
+      require(y % 2 == 0, "Invalid y position");
+    }
+
+    // 1人2本チェック
+    uint8 count;
+    for (uint256 i = 0; i < _games[gameId].linePlayers.length; i++) {
+      if (_games[gameId].linePlayers[i] == msg.sender) {
+        count++;
+      }
+    }
+    require(count < 2, "Already drawing 2 positions");
+
+    _games[gameId].linesX.push(xStartPos);
+    _games[gameId].linesY.push(y);
+    _games[gameId].linePlayers.push(msg.sender);
     return true;
   }
 
-  // reveal (by owner): isHeldを変えるだけ。
-  // publicにしている理由はゲーム参加者が誰も結果表示をしなかった場合誰でもrevealできるようにするため
-  // TODO full on chain にするならこれの呼び出し方法も検討
-  function reveal(uint256 _id) public {
-    require(_games[_id].startTime + entryTimeDuration + drawTimeDuration <= block.timestamp, "Not Ended drawing time");
-    _games[_id].isHeld = false;
-    // TODO 報酬の分配をするか検討
-  }
-
   // 勝った人が自分の意思でmintできる
-
   // result: ゲーム結果を得る
-  function result(uint256 _id) public view returns (AfterRevealGame memory) {
-    require(_games[_id].isHeld == false, "Not revealed");
+  function result(uint32 _id) public view returns (ResultGame memory) {
+    require(_games[_id].startTime + startTimeDuration < block.timestamp, "Game is not ended");
+    (uint8[] memory myLinesX, uint8[] memory myLinesY) = _myLines(_id);
 
-    AfterRevealGame memory _game = AfterRevealGame({
+    ResultGame memory _game = ResultGame({
       id: _games[_id].id,
       startTime: _games[_id].startTime,
-      endTime: _games[_id].startTime + entryTimeDuration + drawTimeDuration,
-      atariPos: _games[_id].atariPos,
+      atariPosition: _games[_id].atariPosition,
       winner: _calcWinner(_id),
       players: _games[_id].players,
-      playersPos: _games[_id].playersPos,
-      lines: _games[_id].lines
+      playerNames: _games[_id].playerNames,
+      myLinesX: myLinesX,
+      myLinesY: myLinesY,
+      map: _lineToMap(_id)
     });
     return _game;
   }
 
-  // reveal前のGameを返す
-  function game(uint256 _id) public view returns (BeforeRevealGame memory) {
-    BeforeRevealGame memory _game = BeforeRevealGame({
+  // BeforeRevealGameのGameを返す
+  function game(uint32 _id) public view returns (PublicGame memory) {
+    (uint8[] memory myLinesX, uint8[] memory myLinesY) = _myLines(_id);
+
+    PublicGame memory _game = PublicGame({
       id: _games[_id].id,
       startTime: _games[_id].startTime,
-      drawingStartTime: _games[_id].startTime + entryTimeDuration,
-      endTime: _games[_id].startTime + entryTimeDuration + drawTimeDuration,
-      players: _games[_id].players
+      players: _games[_id].players,
+      playerNames: _games[_id].playerNames,
+      myLinesX: myLinesX,
+      myLinesY: myLinesY
     });
     return _game;
   }
