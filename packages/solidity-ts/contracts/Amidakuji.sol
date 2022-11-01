@@ -8,12 +8,13 @@ import "./StringUtils.sol";
 contract Amidakuji is Ownable {
   using StringUtils for string;
 
-  uint32 public currentGameId;
+  uint256 public currentGameId;
   uint256 public baseStartTime;
-  uint256 public startTimeDuration = 1 days; // 86400s
+  // uint256 public startTimeDuration = 1 days; // 86400s
+  uint256 public startTimeDuration = 1 minutes;
 
   struct PrivateGame {
-    uint32 id;
+    uint256 id;
     uint256 startTime;
     uint8 atariPosition; // A->1 ~ F->6
     address[] players;
@@ -25,7 +26,7 @@ contract Amidakuji is Ownable {
   }
 
   struct PublicGame {
-    uint32 id;
+    uint256 id;
     uint256 startTime;
     address[] players;
     string[] playerNames;
@@ -34,22 +35,23 @@ contract Amidakuji is Ownable {
   }
 
   struct ResultGame {
-    uint32 id;
+    uint256 id;
     uint256 startTime;
     uint8 atariPosition;
     address winner;
     address[] players;
+    uint8[] playerPositions;
     string[] playerNames;
     uint8[] myLinesX;
     uint8[] myLinesY;
-    bool[6][] map;
+    bool[12][] map;
   }
 
   mapping(uint256 => PrivateGame) private _games;
 
   constructor() {
     currentGameId = 0;
-    baseStartTime = 1667088000; // 2022-10-30 09:00:00 (JST)
+    baseStartTime = 1667260800; // 2022-11-01 09:00:00 (JST)
   }
 
   function _randMod(uint256 _nonce, uint256 _modulus) private view returns (uint256) {
@@ -77,12 +79,13 @@ contract Amidakuji is Ownable {
     _games[currentGameId].id = currentGameId;
     // YYYY/MM/DD 09:00:00(JST)
     _games[currentGameId].startTime = beforeGameStartTime + (beforeGameDiffDate * startTimeDuration);
+    // _games[currentGameId].atariPosition = 3;
     _games[currentGameId].atariPosition = uint8(_randMod(_nonce, 6) + 1);
 
     return currentGameId;
   }
 
-  function _myLines(uint32 _id) private view returns (uint8[] memory, uint8[] memory) {
+  function _myLines(uint256 _id) private view returns (uint8[] memory, uint8[] memory) {
     uint8[] memory myLinesX = new uint8[](2);
     uint8[] memory myLinesY = new uint8[](2);
 
@@ -98,14 +101,16 @@ contract Amidakuji is Ownable {
     return (myLinesX, myLinesY);
   }
 
-  function _lineToMap(uint256 _id) private view returns (bool[6][] memory) {
-    bool[6][] memory map = new bool[6][](12);
+  function _lineToMap(uint256 _id) private view returns (bool[12][] memory) {
+    bool[12][] memory map = new bool[12][](6);
 
     // mapping
     for (uint256 i = 0; i < _games[_id].linePlayers.length; i++) {
       uint8 lineX = _games[_id].linesX[i];
       uint8 lineY = _games[_id].linesY[i];
-      map[lineX - 1][lineY - 1] = true;
+      if (lineX != 0 && lineY != 0) {
+        map[lineX - 1][lineY - 1] = true;
+      }
     }
 
     return map;
@@ -114,9 +119,10 @@ contract Amidakuji is Ownable {
   function _calcWinner(uint256 _id) private view returns (address) {
     uint256 currentPos = _games[_id].atariPosition;
     address winner;
-    bool[6][] memory map = _lineToMap(_id);
+    // アクセスするときは添字が逆になるのに注意
+    bool[12][] memory map = _lineToMap(_id);
 
-    // 配列の後ろから逆算していく
+    // // 配列の後ろから逆算していく
     for (uint256 i = 12; i > 0; i--) {
       if (map[currentPos - 1][i - 1] == true) {
         if ((currentPos % 2 == 0 && i % 2 == 0) || (currentPos % 2 == 1 && i % 2 == 1)) {
@@ -143,7 +149,7 @@ contract Amidakuji is Ownable {
   function entry(string memory _name, uint8 _pos) public returns (bool) {
     uint256 gameId = currentGameId;
 
-    if (_games[gameId].startTime + 1 days < block.timestamp) {
+    if (_games[gameId].startTime + startTimeDuration < block.timestamp) {
       gameId = _setup(uint256(keccak256(abi.encodePacked(block.timestamp))));
     }
 
@@ -158,7 +164,9 @@ contract Amidakuji is Ownable {
     }
 
     // name check
+    // Feature: 英数字チェック
     require(_name.strlen() >= 0 && _name.strlen() <= 3, "Name is invalid");
+    require(_pos >= 1 && _pos <= 6, "Invalid x Position");
 
     _games[gameId].players.push(msg.sender);
     _games[gameId].playerPositions.push(_pos);
@@ -168,8 +176,9 @@ contract Amidakuji is Ownable {
 
   // draw: 線を引く。private領域へ情報を格納。1人２本引ける
   // xStartPosはA,C,Eが1~12の奇数, B,Dが2~12の偶数
+  // TODO まとめて2本引く機能
   function draw(uint8 xStartPos, uint8 y) public returns (bool) {
-    uint32 gameId = currentGameId;
+    uint256 gameId = currentGameId;
     require(_games[gameId].startTime + startTimeDuration > block.timestamp, "Game is not started");
 
     // 参加チェック
@@ -210,7 +219,7 @@ contract Amidakuji is Ownable {
 
   // 勝った人が自分の意思でmintできる
   // result: ゲーム結果を得る
-  function result(uint32 _id) public view returns (ResultGame memory) {
+  function result(uint256 _id) public view returns (ResultGame memory) {
     require(_games[_id].startTime + startTimeDuration < block.timestamp, "Game is not ended");
     (uint8[] memory myLinesX, uint8[] memory myLinesY) = _myLines(_id);
 
@@ -220,6 +229,7 @@ contract Amidakuji is Ownable {
       atariPosition: _games[_id].atariPosition,
       winner: _calcWinner(_id),
       players: _games[_id].players,
+      playerPositions: _games[_id].playerPositions,
       playerNames: _games[_id].playerNames,
       myLinesX: myLinesX,
       myLinesY: myLinesY,
@@ -229,7 +239,7 @@ contract Amidakuji is Ownable {
   }
 
   // BeforeRevealGameのGameを返す
-  function game(uint32 _id) public view returns (PublicGame memory) {
+  function game(uint256 _id) public view returns (PublicGame memory) {
     (uint8[] memory myLinesX, uint8[] memory myLinesY) = _myLines(_id);
 
     PublicGame memory _game = PublicGame({
