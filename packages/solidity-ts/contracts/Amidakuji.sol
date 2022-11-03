@@ -16,6 +16,7 @@ contract Amidakuji is Ownable {
   struct PrivateGame {
     uint256 id;
     uint256 startTime;
+    uint256 endTime;
     uint8 atariPosition; // A->1 ~ F->6
     address[] players;
     uint8[] playerPositions; // playersと同じindexに格納
@@ -28,8 +29,10 @@ contract Amidakuji is Ownable {
   struct PublicGame {
     uint256 id;
     uint256 startTime;
+    uint256 endTime;
     address[] players;
     string[] playerNames;
+    uint8[] playerPositions;
     uint8[] myLinesX;
     uint8[] myLinesY;
   }
@@ -37,6 +40,7 @@ contract Amidakuji is Ownable {
   struct ResultGame {
     uint256 id;
     uint256 startTime;
+    uint256 endTime;
     uint8 atariPosition;
     address winner;
     address[] players;
@@ -44,7 +48,7 @@ contract Amidakuji is Ownable {
     string[] playerNames;
     uint8[] myLinesX;
     uint8[] myLinesY;
-    bool[12][] map;
+    bool[12][] amidaMap;
   }
 
   mapping(uint256 => PrivateGame) private _games;
@@ -79,8 +83,10 @@ contract Amidakuji is Ownable {
     _games[currentGameId].id = currentGameId;
     // YYYY/MM/DD 09:00:00(JST)
     _games[currentGameId].startTime = beforeGameStartTime + (beforeGameDiffDate * startTimeDuration);
-    // _games[currentGameId].atariPosition = 3;
-    _games[currentGameId].atariPosition = uint8(_randMod(_nonce, 6) + 1);
+    _games[currentGameId].endTime = beforeGameStartTime + (beforeGameDiffDate * startTimeDuration) + startTimeDuration;
+    // TODO
+    _games[currentGameId].atariPosition = 3;
+    // _games[currentGameId].atariPosition = uint8(_randMod(_nonce, 6) + 1);
 
     return currentGameId;
   }
@@ -125,11 +131,11 @@ contract Amidakuji is Ownable {
     // // 配列の後ろから逆算していく
     for (uint256 i = 12; i > 0; i--) {
       if (map[currentPos - 1][i - 1] == true) {
-        if ((currentPos % 2 == 0 && i % 2 == 0) || (currentPos % 2 == 1 && i % 2 == 1)) {
-          // x,yが偶数同士もしくは奇数同士だと右移動
-          currentPos = currentPos + 1;
-        } else {
-          // 左へ移動
+        // 終点とマッチ
+        currentPos = currentPos + 1;
+      } else if (currentPos >= 2) {
+        if (map[currentPos - 2][i - 1] == true) {
+          // 始点とマッチ
           currentPos = currentPos - 1;
         }
       }
@@ -226,6 +232,7 @@ contract Amidakuji is Ownable {
     ResultGame memory _game = ResultGame({
       id: _games[_id].id,
       startTime: _games[_id].startTime,
+      endTime: _games[_id].endTime,
       atariPosition: _games[_id].atariPosition,
       winner: _calcWinner(_id),
       players: _games[_id].players,
@@ -233,7 +240,7 @@ contract Amidakuji is Ownable {
       playerNames: _games[_id].playerNames,
       myLinesX: myLinesX,
       myLinesY: myLinesY,
-      map: _lineToMap(_id)
+      amidaMap: _lineToMap(_id)
     });
     return _game;
   }
@@ -245,8 +252,10 @@ contract Amidakuji is Ownable {
     PublicGame memory _game = PublicGame({
       id: _games[_id].id,
       startTime: _games[_id].startTime,
+      endTime: _games[_id].endTime,
       players: _games[_id].players,
       playerNames: _games[_id].playerNames,
+      playerPositions: _games[_id].playerPositions,
       myLinesX: myLinesX,
       myLinesY: myLinesY
     });

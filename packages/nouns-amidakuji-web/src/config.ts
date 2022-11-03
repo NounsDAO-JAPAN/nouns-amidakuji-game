@@ -1,11 +1,5 @@
 import { ChainId } from '@usedapp/core';
 
-interface ExternalContractAddresses {
-  lidoToken: string | undefined;
-}
-
-export type ContractAddresses = ExternalContractAddresses;
-
 interface AppConfig {
   jsonRpcUri: string;
   wsRpcUri: string;
@@ -13,11 +7,8 @@ interface AppConfig {
   enableHistory: boolean;
 }
 
-type SupportedChains =
-  // | ChainId.Rinkeby
-  // | ChainId.Mainnet
-  ChainId.Hardhat;
-// | ChainId.Goerli;
+type SupportedChains = ChainId.Hardhat;
+// |ChainId.Mainnet  | ChainId.Goerli;
 
 interface CacheBucket {
   name: string;
@@ -46,20 +37,6 @@ export const CHAIN_ID: SupportedChains = parseInt(
   process.env.REACT_APP_CHAIN_ID ?? '31337'
 );
 
-export const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY ?? '';
-
-const INFURA_PROJECT_ID = process.env.REACT_APP_INFURA_PROJECT_ID;
-
-export const createNetworkHttpUrl = (network: string): string => {
-  const custom = process.env[`REACT_APP_${network.toUpperCase()}_JSONRPC`];
-  return custom || `https://${network}.infura.io/v3/${INFURA_PROJECT_ID}`;
-};
-
-export const createNetworkWsUrl = (network: string): string => {
-  const custom = process.env[`REACT_APP_${network.toUpperCase()}_WSRPC`];
-  return custom || `wss://${network}.infura.io/ws/v3/${INFURA_PROJECT_ID}`;
-};
-
 const app: Record<SupportedChains, AppConfig> = {
   [ChainId.Hardhat]: {
     jsonRpcUri: 'http://localhost:8545',
@@ -70,49 +47,15 @@ const app: Record<SupportedChains, AppConfig> = {
   },
 };
 
-const externalAddresses = {
-  // const externalAddresses: Record<SupportedChains, ExternalContractAddresses> = {
-  // [ChainId.Rinkeby]: {
-  //   lidoToken: '0xF4242f9d78DB7218Ad72Ee3aE14469DBDE8731eD',
-  // },
-  // [ChainId.Goerli]: {
-  //   lidoToken: '0x2DD6530F136D2B56330792D46aF959D9EA62E276',
-  // },
-  // [ChainId.Mainnet]: {
-  //   lidoToken: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
-  // },
-  [ChainId.Hardhat]: {
-    lidoToken: undefined,
-  },
-};
-
-const getContractAddressesForChainOrThrow = (
-  chainId: number
-): ContractAddresses => {
-  // TODO
-  const _addresses: Record<string, ContractAddresses> = {};
-  if (!_addresses[chainId]) {
-    throw new Error(
-      `Unknown chain id (${chainId}). No known contracts have been deployed on this chain.`
-    );
-  }
-  return _addresses[chainId];
-};
-
-const getAddresses = (): ContractAddresses => {
-  let nounsAddresses = {} as ContractAddresses;
-  try {
-    nounsAddresses = getContractAddressesForChainOrThrow(CHAIN_ID);
-  } catch {}
-  return { ...nounsAddresses, ...externalAddresses[CHAIN_ID] };
-};
-
 const config = {
   app: app[CHAIN_ID],
-  addresses: getAddresses(),
+  addresses: '',
 };
 
 export default config;
 
-export const multicallOnLocalhost =
-  '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e';
+// TODO
+export const amidakujiContractAddr =
+  '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1';
+export const amidakujiSBTContractAddr =
+  '0x59b670e9fA9D0A427751Af201D676719a970857b';

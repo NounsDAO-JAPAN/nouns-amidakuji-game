@@ -24,7 +24,7 @@ struct ResultGame {
   string[] playerNames;
   uint8[] myLinesX;
   uint8[] myLinesY;
-  bool[12][] map;
+  bool[12][] amidaMap;
 }
 
 interface AmidakujiInterface {
@@ -107,20 +107,25 @@ contract AmidakujiSBT is ERC721, ERC721Enumerable, Ownable {
     // TODO optimize
     // player name
     for (uint256 i = 0; i < game.playerPositions.length; i++) {
-      baseSVG = string(abi.encodePacked(baseSVG, _nameSVG(uint256(game.playerPositions[i]) * 100 + 70, game.playerNames[i])));
+      baseSVG = string(abi.encodePacked(baseSVG, _nameSVG(uint256(game.playerPositions[i]) * 100 - 30, game.playerNames[i])));
     }
 
     // TODO optimize
     // line x
     for (uint256 i = 0; i < 6; i++) {
       for (uint256 j = 0; j < 12; j++) {
-        if (game.map[i][j] == true) {
+        if (game.amidaMap[i][j] == true) {
           baseSVG = string(abi.encodePacked(baseSVG, _xLineSVG(i * 100 + 100, j * 50 + 50)));
         }
       }
     }
 
     return string(abi.encodePacked(baseSVG, _atariSVG(uint256(game.atariPosition) * 100 - 15), SVGFooter));
+  }
+
+  function tokenImage(uint256 _gameId) public view returns (string memory) {
+    bytes memory image = bytes(_generateSVG(_gameId));
+    return string(abi.encodePacked("data:image/svg+xml;base64,", Base64.encode(image)));
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {

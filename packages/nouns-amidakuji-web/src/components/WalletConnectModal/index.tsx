@@ -1,3 +1,4 @@
+import React from 'react';
 import WalletButton from './WalletButton';
 import { WALLET_TYPE } from './WalletButton';
 import { useEthers } from '@usedapp/core';
@@ -5,21 +6,17 @@ import { InjectedConnector } from '@web3-react/injected-connector';
 import modalClasses from './Modal.module.css';
 import classes from './WalletConnectModal.module.css';
 
-export const Backdrop: React.FC<{ onDismiss: () => void }> = (props) => {
-  return <div className={modalClasses.backdrop} onClick={props.onDismiss} />;
+export const Backdrop: React.FC<{}> = () => {
+  return <div className={modalClasses.backdrop} />;
 };
 
 const ModalOverlay: React.FC<{
   title?: React.ReactNode;
   content?: React.ReactNode;
-  onDismiss: () => void;
 }> = (props) => {
-  const { title, content, onDismiss } = props;
+  const { title, content } = props;
   return (
     <div className={modalClasses.modal}>
-      <button className={modalClasses.closeButton} onClick={onDismiss}>
-        <img src="/x-icon.png" alt="Button to close modal" />
-      </button>
       <h3>{title}</h3>
       <div className={modalClasses.content}>{content}</div>
     </div>
@@ -29,9 +26,8 @@ const ModalOverlay: React.FC<{
 const Modal: React.FC<{
   title?: React.ReactNode;
   content?: React.ReactNode;
-  onDismiss: () => void;
 }> = (props) => {
-  const { title, content, onDismiss } = props;
+  const { title, content } = props;
   return (
     <div
       style={{
@@ -44,16 +40,15 @@ const Modal: React.FC<{
         overflow: 'hidden',
       }}
     >
-      <Backdrop onDismiss={onDismiss} />
-      <ModalOverlay title={title} content={content} onDismiss={onDismiss} />
+      <Backdrop />
+      <ModalOverlay title={title} content={content} />
     </div>
   );
 };
 
-const WalletConnectModal: React.FC<{ onDismiss: () => void }> = (props) => {
-  const { onDismiss } = props;
+const WalletConnectModal: React.FC<{}> = () => {
   const { activate } = useEthers();
-  const supportedChainIds = [31337];
+  const supportedChainIds = [31337]; // TODO
 
   const wallets = (
     <div className={classes.walletConnectModal}>
@@ -68,12 +63,6 @@ const WalletConnectModal: React.FC<{ onDismiss: () => void }> = (props) => {
       />
     </div>
   );
-  return (
-    <Modal
-      title="Connect your wallet"
-      content={wallets}
-      onDismiss={onDismiss}
-    />
-  );
+  return <Modal title="Connect your wallet" content={wallets} />;
 };
 export default WalletConnectModal;

@@ -3,36 +3,35 @@ import Head from 'next/head';
 import Image from 'react-bootstrap/Image';
 import { Col, Container, Row } from 'react-bootstrap';
 import styled from 'styled-components';
-import useCurrentAmidakuji from '../src/hooks/useCurrentAmidakuji';
+import NavBar from '../../src/components/NavBar';
 import dayjs from 'dayjs';
-import NavBar from '../src/components/NavBar';
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import useAmidakujiResult from '../../src/hooks/useAmidakujiResult';
+import { useEthers } from '@usedapp/core';
 
-const Home: NextPage = () => {
-  const { game, entry, draw } = useCurrentAmidakuji();
-  const [pos, setPos] = useState<number>();
-  const [name, setName] = useState<string>('');
-  const [x, setX] = useState<number>();
-  const [y, setY] = useState<number>();
+const Id: NextPage = () => {
+  const router = useRouter();
+  const { account } = useEthers();
+  const [id, setId] = useState<string>();
+  const { result, image, mintItem } = useAmidakujiResult(parseInt(id || ''));
 
-  const onEntry = useCallback(() => {
-    if (entry && pos && name) {
-      entry(name, pos);
+  useEffect(() => {
+    if (router.isReady) {
+      const { id } = router.query;
+      setId(id as string);
     }
-  }, [entry, name, pos]);
-
-  const onDraw = useCallback(() => {
-    if (draw && x && y) {
-      draw(x, y);
-    }
-  }, [draw, x, y]);
+  }, [router.isReady, router.query]);
 
   return (
     <div>
       <Head>
         <title>Nouns Amidakuji</title>
         <meta name="description" content="Nouns Amidakuji" />
-        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="icon"
+          href="/packages/nouns-amidakuji-web/public/favicon.ico"
+        />
       </Head>
       <Wrapper>
         <Container fluid="xl">
@@ -41,7 +40,7 @@ const Home: NextPage = () => {
             <NounContentCol lg={{ span: 6 }}>
               <NounWrapper>
                 <ImageWrapper>
-                  <NounImage src={'/sample.png'} alt={''} fluid />
+                  <NounImage src={image || ''} alt={''} fluid />
                 </ImageWrapper>
               </NounWrapper>
             </NounContentCol>
@@ -56,9 +55,9 @@ const Home: NextPage = () => {
                       </NavArrowsContainer>
                       <AuctionActivityDateHeadlineWrapper>
                         <AuctionActivityDateHeadlineDate>
-                          {game &&
+                          {result &&
                             dayjs
-                              .unix(game.startTime.toNumber())
+                              .unix(result.startTime.toNumber())
                               .format('YYYY-MM-DD HH:mm:ss')}
                         </AuctionActivityDateHeadlineDate>
                       </AuctionActivityDateHeadlineWrapper>
@@ -66,64 +65,28 @@ const Home: NextPage = () => {
                     <Col lg={12}>
                       <AuctionActivityNounTitle>
                         <h1 style={{ color: 'var(--brand-cool-dark-text)' }}>
-                          # {game?.id.toNumber()}
+                          # {result?.id.toNumber()}
                         </h1>
                       </AuctionActivityNounTitle>
                     </Col>
                   </ActivityRow>
                   <ActivityRow>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="NAME(max length 3)"
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                      <input
-                        type="number"
-                        placeholder="POS(1~6)"
-                        min={1}
-                        max={6}
-                        onChange={(e) => setPos(parseInt(e.target.value))}
-                        style={{ width: 120 }}
-                      />
-                      <button onClick={onEntry}>Entry</button>
-                    </div>
-                  </ActivityRow>
-                  <ActivityRow>
-                    <div>
-                      <input
-                        type="number"
-                        placeholder="X(1~5)"
-                        min={1}
-                        max={5}
-                        onChange={(e) => setX(parseInt(e.target.value))}
-                        style={{ width: 80 }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Y(1~12)"
-                        min={1}
-                        max={12}
-                        onChange={(e) => setY(parseInt(e.target.value))}
-                        style={{ width: 80 }}
-                      />
-                      <button onClick={onDraw}>Draw</button>
-                    </div>
-                  </ActivityRow>
-                  <ActivityRow>
                     players:
-                    {game?.players.map((p) => (
+                    {result?.players.map((p) => (
                       <div key={p}>{p}</div>
                     ))}
                   </ActivityRow>
                   <ActivityRow>
                     playerNames:
-                    {game?.playerNames.map((p) => (
+                    {result?.playerNames.map((p) => (
                       <div key={p}>{p}</div>
                     ))}
                   </ActivityRow>
+                  <ActivityRow>winner: {result?.winner}</ActivityRow>
                   <ActivityRow>
-                    playerPositions: {game?.playerPositions?.join(',')}
+                    {result?.winner === account && id && mintItem && (
+                      <button onClick={() => mintItem(id)}>MINT</button>
+                    )}
                   </ActivityRow>
                 </InformationRow>
               </AuctionActivityWrapper>
@@ -135,7 +98,7 @@ const Home: NextPage = () => {
   );
 };
 
-export default Home;
+export default Id;
 
 const Wrapper = styled.div`
   background-color: rgb(213, 215, 225);

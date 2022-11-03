@@ -6718,7 +6718,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-plugin-styled-components@npm:>= 1.12.0":
+"babel-plugin-styled-components@npm:>= 1.12.0, babel-plugin-styled-components@npm:^2.0.7":
   version: 2.0.7
   resolution: "babel-plugin-styled-components@npm:2.0.7"
   dependencies:
@@ -9443,6 +9443,13 @@ __metadata:
   version: 1.11.5
   resolution: "dayjs@npm:1.11.5"
   checksum: e3bbaa7b4883b31be4bf75a181f1447fbb19800c29b332852125aab96baeff3ac232dcba8b88c4ea17d3b636c99dac5fb9d1af4bb6ae26615698bbc4a852dffb
+  languageName: node
+  linkType: hard
+
+"dayjs@npm:^1.11.6":
+  version: 1.11.6
+  resolution: "dayjs@npm:1.11.6"
+  checksum: 18bdfd927009b68eab08dca578e421d4a581cefcbe9337f54c5d9e0d941ffb6b221c4b2c1cab15cdd9d419940e768ac4c984531461a90bbe1c158b75fe160580
   languageName: node
   linkType: hard
 
@@ -19310,8 +19317,10 @@ __metadata:
     "@web3-react/trezor-connector": ^6.1.9
     "@web3-react/walletconnect-connector": ^6.2.13
     "@web3-react/walletlink-connector": ^6.2.14
+    babel-plugin-styled-components: ^2.0.7
     bootstrap: ^5.2.2
     clsx: ^1.2.1
+    dayjs: ^1.11.6
     eslint: 8.25.0
     eslint-config-next: 12.3.1
     eslint-config-prettier: ^8.5.0

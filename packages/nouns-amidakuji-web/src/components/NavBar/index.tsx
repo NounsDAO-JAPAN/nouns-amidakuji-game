@@ -1,10 +1,10 @@
 import { Navbar, Container } from 'react-bootstrap';
 import NavWallet from './NavWallet';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useEthers } from '@usedapp/core';
 
-const NavBar = () => {
+const Index = () => {
   const { account } = useEthers();
   const [isNavExpanded, setIsNavExpanded] = useState(false);
 
@@ -12,17 +12,17 @@ const NavBar = () => {
     <>
       <NavBarCustom expand="xl" expanded={isNavExpanded}>
         <Container style={{ maxWidth: 'unset' }}>
-          {/*<BrandAndTreasuryWrapper>*/}
-          {/*  <NavBarBrand to="/">*/}
-          {/*    <NavBarLogo src={'/logo.svg'} alt="Nouns DAO logo" />*/}
-          {/*  </NavBarBrand>*/}
-          {/*</BrandAndTreasuryWrapper>*/}
+          <BrandAndTreasuryWrapper>
+            <NavBarBrand to="/">
+              <NavBarLogo src="/logo.svg" alt="Nouns DAO logo" />
+            </NavBarBrand>
+          </BrandAndTreasuryWrapper>
           <NavBarToggle
             aria-controls="basic-navbar-nav"
             onClick={() => setIsNavExpanded(!isNavExpanded)}
           />
           <Navbar.Collapse className="justify-content-end">
-            <NavWallet address={account || '0'} buttonStyle={4} />
+            <NavWallet address={account || '0'} />
           </Navbar.Collapse>
         </Container>
       </NavBarCustom>
@@ -30,7 +30,7 @@ const NavBar = () => {
   );
 };
 
-export default NavBar;
+export default Index;
 
 const NavBarCustom = styled(Navbar)`
   background-color: rgb(213, 215, 225);
