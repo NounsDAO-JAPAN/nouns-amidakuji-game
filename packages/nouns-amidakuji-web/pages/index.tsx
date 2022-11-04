@@ -36,7 +36,7 @@ const numToPos = (num: number) => {
 };
 
 const Entry: React.FC<{ isNew?: boolean }> = ({ isNew = false }) => {
-  const { game, entry } = useCurrentAmidakuji();
+  const { game, entry, entryState } = useCurrentAmidakuji();
   const [pos, setPos] = useState<number>();
   const [name, setName] = useState<string>('');
 
@@ -88,6 +88,19 @@ const Entry: React.FC<{ isNew?: boolean }> = ({ isNew = false }) => {
             Entry
           </BidButton>
         </div>
+        {entryState?.transaction && (
+          <ActivityRow>
+            Transaction Hash:
+            <Link
+              href={`https://goerli.etherscan.io/tx/${entryState?.transaction.hash}`}
+              target="_blank"
+            >
+              <a target="_blank">
+                {toShortAddress(entryState?.transaction.hash)}
+              </a>
+            </Link>
+          </ActivityRow>
+        )}
       </div>
     </>
   );
@@ -98,7 +111,7 @@ const zeroAddr = '0x0000000000000000000000000000000000000000';
 const Home: NextPage = () => {
   const { account } = useEthers();
   const router = useRouter();
-  const { game, draw, drawState, entryState } = useCurrentAmidakuji();
+  const { game, draw, drawState } = useCurrentAmidakuji();
   const { image, result, mintItem, mintState } = useAmidakujiResult(
     game?.id.toNumber()
   );
@@ -399,19 +412,6 @@ const Home: NextPage = () => {
                       >
                         <a target="_blank">
                           {toShortAddress(drawState?.transaction.hash)}
-                        </a>
-                      </Link>
-                    </ActivityRow>
-                  )}
-                  {entryState?.transaction && (
-                    <ActivityRow>
-                      Transaction Hash:
-                      <Link
-                        href={`https://goerli.etherscan.io/tx/${entryState?.transaction.hash}`}
-                        target="_blank"
-                      >
-                        <a target="_blank">
-                          {toShortAddress(entryState?.transaction.hash)}
                         </a>
                       </Link>
                     </ActivityRow>
