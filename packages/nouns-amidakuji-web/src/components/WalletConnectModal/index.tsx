@@ -48,7 +48,8 @@ const Modal: React.FC<{
 
 const WalletConnectModal: React.FC<{}> = () => {
   const { activate } = useEthers();
-  const supportedChainIds = [31337]; // TODO
+  // const supportedChainIds = [31337]; // TODO
+  const supportedChainIds = [5]; // TODO
 
   const wallets = (
     <div className={classes.walletConnectModal}>

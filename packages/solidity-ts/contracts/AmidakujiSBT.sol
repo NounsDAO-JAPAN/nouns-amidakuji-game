@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 struct ResultGame {
   uint256 id;
   uint256 startTime;
+  uint256 endTime;
   uint8 atariPosition;
   address winner;
   address[] players;
@@ -68,46 +69,110 @@ contract AmidakujiSBT is ERC721, ERC721Enumerable, Ownable {
 
   string constant SVGHeader = '<svg viewBox="0 0 700 700"  xmlns="http://www.w3.org/2000/svg">';
   string constant SVGFooter = "</svg>";
+  string constant _yLineSVG =
+    '<path d="M110 50h5v600h-5zM205 50h5v600h-5zM300 50h5v600h-5zM395 50h5v600h-5zM490 50h5v600h-5zM585 50h5v600h-5z" style="fill:#f3322c"/>';
 
   function _nameSVG(uint256 _x, string memory name) internal pure returns (string memory) {
-    return string(abi.encodePacked('<text x="', Strings.toString(_x), '" y="40" font-size="32">', name, "</text>"));
+    return string(abi.encodePacked('<text x="', Strings.toString(_x - 15), '" y="40" font-size="32">', name, "</text>"));
   }
 
   function _atariSVG(uint256 _x) internal pure returns (string memory) {
     return string(abi.encodePacked('<text x="', Strings.toString(_x), '" y="680" font-size="32">W</text>'));
   }
 
-  function _yLineSVG(uint256 _x) internal pure returns (string memory) {
-    return
-      string(abi.encodePacked('<line x1="', Strings.toString(_x), '" y1="50" x2="', Strings.toString(_x), '" y2="650" stroke="#00FFFF" stroke-width="16"/>'));
-  }
-
   function _xLineSVG(uint256 _x, uint256 _y) internal pure returns (string memory) {
-    return
-      string(
-        abi.encodePacked(
-          '<line x1="',
-          Strings.toString(_x),
-          '" y1="',
-          Strings.toString(_y),
-          '" x2="',
-          Strings.toString(_x + 100),
-          '" y2="',
-          Strings.toString(_y),
-          '" stroke="#FF0000" stroke-width="16"/>'
-        )
-      );
+    string memory svg = string(
+      abi.encodePacked(
+        '<path d="M',
+        Strings.toString(_x + 210),
+        ".01 ",
+        Strings.toString(_y + 81),
+        ".29v6.25h-37.44V",
+        Strings.toString(_y + 68),
+        ".77h-6.25v18.77h-37.55V",
+        Strings.toString(_y + 68),
+        ".77H",
+        Strings.toString(_x + 110)
+      )
+    );
+
+    svg = string(
+      abi.encodePacked(
+        svg,
+        "v-6.25h18.77V",
+        Strings.toString(_y + 49),
+        ".99h37.55v12.53h6.25V",
+        Strings.toString(_y + 49),
+        ".99h37.44V",
+        Strings.toString(_y + 49),
+        '.99z" style="fill:#f3322c"/>'
+      )
+    );
+
+    svg = string(
+      abi.encodePacked(
+        svg,
+        '<path d="M',
+        Strings.toString(_x + 203),
+        ".85 ",
+        Strings.toString(_y + 75),
+        ".03v6.26h-12.51V",
+        Strings.toString(_y + 56),
+        '.26h12.51v18.77z"/>'
+      )
+    );
+
+    svg = string(
+      abi.encodePacked(
+        svg,
+        '<path d="M',
+        Strings.toString(_x + 191),
+        ".34 ",
+        Strings.toString(_y + 75),
+        ".03v6.26h-12.51V",
+        Strings.toString(_y + 56),
+        '.26h12.51v18.77z" style="fill:#fff"/>'
+      )
+    );
+
+    svg = string(
+      abi.encodePacked(
+        svg,
+        '<path d="M',
+        Strings.toString(_x + 160),
+        ".06 ",
+        Strings.toString(_y + 75),
+        ".03v6.26h-12.52V",
+        Strings.toString(_y + 56),
+        '.26h12.52v18.77z"/>'
+      )
+    );
+
+    svg = string(
+      abi.encodePacked(
+        svg,
+        '<path d="M',
+        Strings.toString(_x + 147),
+        ".54 ",
+        Strings.toString(_y + 75),
+        ".03v6.26h-12.51V",
+        Strings.toString(_y + 56),
+        '.26h12.51v18.77z" style="fill:#fff"/>'
+      )
+    );
+
+    return svg;
   }
 
   function _generateSVG(uint256 _gameId) internal view returns (string memory) {
     ResultGame memory game = amidakujiContract.result(_gameId);
 
-    string memory baseSVG = string(abi.encodePacked(SVGHeader, _yLineSVG(100), _yLineSVG(200), _yLineSVG(300), _yLineSVG(400), _yLineSVG(500), _yLineSVG(600)));
+    string memory baseSVG = string(abi.encodePacked(SVGHeader, _yLineSVG));
 
     // TODO optimize
     // player name
     for (uint256 i = 0; i < game.playerPositions.length; i++) {
-      baseSVG = string(abi.encodePacked(baseSVG, _nameSVG(uint256(game.playerPositions[i]) * 100 - 30, game.playerNames[i])));
+      baseSVG = string(abi.encodePacked(baseSVG, _nameSVG(uint256(game.playerPositions[i]) * 95, game.playerNames[i])));
     }
 
     // TODO optimize
@@ -115,12 +180,12 @@ contract AmidakujiSBT is ERC721, ERC721Enumerable, Ownable {
     for (uint256 i = 0; i < 6; i++) {
       for (uint256 j = 0; j < 12; j++) {
         if (game.amidaMap[i][j] == true) {
-          baseSVG = string(abi.encodePacked(baseSVG, _xLineSVG(i * 100 + 100, j * 50 + 50)));
+          baseSVG = string(abi.encodePacked(baseSVG, _xLineSVG(i * 95, j * 50)));
         }
       }
     }
 
-    return string(abi.encodePacked(baseSVG, _atariSVG(uint256(game.atariPosition) * 100 - 15), SVGFooter));
+    return string(abi.encodePacked(baseSVG, _atariSVG(uint256(game.atariPosition) * 95), SVGFooter));
   }
 
   function tokenImage(uint256 _gameId) public view returns (string memory) {

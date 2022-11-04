@@ -1,22 +1,27 @@
-import { useMemo } from 'react';
-import { Contract, utils } from 'ethers';
+import { useEffect, useMemo, useState } from 'react';
+import { Contract, utils, providers } from 'ethers';
 import AmidakujiAbi from '../abi/Amidakuji.json';
 import AmidakujiSBTAbi from '../abi/AmidakujiSBT.json';
 import { Amidakuji, AmidakujiSBT } from '../../gen/types';
 import { amidakujiContractAddr, amidakujiSBTContractAddr } from '../config';
-import { useCall, useContractFunction, useEthers } from '@usedapp/core';
+import { useContractFunction, useEthers } from '@usedapp/core';
+import dayjs from 'dayjs';
 
 function useAmidakujiResult(id?: number) {
   const { account, library: provider } = useEthers();
 
   const amidakujiContract = useMemo(() => {
-    const Interface = new utils.Interface(AmidakujiAbi.abi);
-    return new Contract(
-      amidakujiContractAddr,
-      Interface,
-      provider?.getSigner()
-    ) as Amidakuji;
-  }, [provider]);
+    if (account) {
+      const Interface = new utils.Interface(AmidakujiAbi.abi);
+      return new Contract(
+        amidakujiContractAddr,
+        Interface,
+        provider?.getSigner(account)
+      ) as Amidakuji;
+    } else {
+      return;
+    }
+  }, [account, provider]);
 
   const amidakujiSBTContract = useMemo(() => {
     const Interface = new utils.Interface(AmidakujiSBTAbi.abi);
@@ -27,41 +32,50 @@ function useAmidakujiResult(id?: number) {
     ) as AmidakujiSBT;
   }, [provider]);
 
-  const { value: result, error: error1 } =
-    useCall(
-      account &&
-        id && { contract: amidakujiContract, method: 'result', args: [id] }
-    ) ?? {};
-
-  const { value: image, error: error2 } =
-    useCall(
-      account &&
-        id && {
-          contract: amidakujiSBTContract,
-          method: 'tokenImage',
-          args: [id],
+  const [result, setResult] = useState<Amidakuji.ResultGameStructOutput>();
+  useEffect(() => {
+    if (id) {
+      amidakujiContract?.game(id).then((game) => {
+        const now = dayjs();
+        if (dayjs.unix(game.endTime.toNumber()).diff(now, 'seconds') < 0) {
+          amidakujiContract?.result(id).then(setResult);
         }
-    ) ?? {};
+      });
+    }
+  }, [id, amidakujiContract]);
 
-  const { send: mintItem } = useContractFunction(
+  const [currentGameId, setCurrentGameId] = useState<number>();
+  useEffect(() => {
+    if (id) {
+      amidakujiContract
+        ?.currentGameId()
+        .then((id) => setCurrentGameId(id.toNumber()));
+    }
+  }, [id, amidakujiContract]);
+
+  const [image, setImage] = useState<string>();
+  useEffect(() => {
+    if (id) {
+      amidakujiContract?.game(id).then((game) => {
+        const now = dayjs();
+        if (dayjs.unix(game.endTime.toNumber()).diff(now, 'seconds') < 0) {
+          amidakujiSBTContract?.tokenImage(id).then(setImage);
+        }
+      });
+    }
+  }, [id, amidakujiContract, amidakujiSBTContract]);
+
+  const { send: mintItem, state: mintState } = useContractFunction(
     amidakujiSBTContract,
     'mintItem'
   );
 
-  if (error1) {
-    console.error(error1.message);
-    return {};
-  }
-
-  if (error2) {
-    console.error(error2.message);
-    return {};
-  }
-
   return {
-    result: result?.[0] as Amidakuji.ResultGameStructOutput,
-    image: image?.[0],
+    result: result && (result as Amidakuji.ResultGameStructOutput),
+    image: image,
     mintItem,
+    mintState,
+    currentGameId,
   };
 }
 

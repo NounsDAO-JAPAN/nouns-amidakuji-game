@@ -4,11 +4,13 @@ import type { AppProps } from 'next/app';
 import { ChainId, DAppProvider } from '@usedapp/core';
 
 const useDappConfig = {
-  readOnlyChainId: ChainId.Hardhat,
+  // readOnlyChainId: ChainId.Hardhat,
+  readOnlyChainId: ChainId.Goerli,
   readOnlyUrls: {
-    [ChainId.Hardhat]: 'http://localhost:8545',
+    // [ChainId.Hardhat]: 'http://localhost:8545',
+    [ChainId.Goerli]:
+      'https://goerli.infura.io/v3/948608d585514a4e8f3faf6b29e21fda',
     // [ChainId.Mainnet]: 'http://localhost:8545',
-    // [ChainId.Goerli]: 'http://localhost:8545',
   },
 };
 

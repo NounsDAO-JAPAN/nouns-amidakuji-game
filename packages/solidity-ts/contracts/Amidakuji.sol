@@ -8,10 +8,12 @@ import "./StringUtils.sol";
 contract Amidakuji is Ownable {
   using StringUtils for string;
 
+  event msgEvent(address indexed from, string msg);
+
   uint256 public currentGameId;
   uint256 public baseStartTime;
   // uint256 public startTimeDuration = 1 days; // 86400s
-  uint256 public startTimeDuration = 1 minutes;
+  uint256 public startTimeDuration = 3 minutes;
 
   struct PrivateGame {
     uint256 id;
@@ -70,10 +72,10 @@ contract Amidakuji is Ownable {
     }
 
     // 前回の開始日からの日付差分
-    // 暫定で30年間プレイされなくても大丈夫
+    // 暫定で300年くらいプレイされなくても大丈夫
     uint256 beforeGameDiffDate;
-    for (uint256 i = 1; i < 10000; i++) {
-      if (beforeGameStartTime + (startTimeDuration * i + 1) > block.timestamp) {
+    for (uint256 i = 1; i < 100000; i++) {
+      if (beforeGameStartTime + (startTimeDuration * (i + 1)) > block.timestamp) {
         beforeGameDiffDate = i;
         break;
       }
@@ -177,6 +179,8 @@ contract Amidakuji is Ownable {
     _games[gameId].players.push(msg.sender);
     _games[gameId].playerPositions.push(_pos);
     _games[gameId].playerNames.push(_name);
+
+    emit msgEvent(msg.sender, "DONE");
     return true; // succeed
   }
 
@@ -220,6 +224,8 @@ contract Amidakuji is Ownable {
     _games[gameId].linesX.push(xStartPos);
     _games[gameId].linesY.push(y);
     _games[gameId].linePlayers.push(msg.sender);
+
+    emit msgEvent(msg.sender, "DONE");
     return true;
   }
 

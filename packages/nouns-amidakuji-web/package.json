@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "yarn typechain:generate && next build",
     "start": "next start",
     "lint": "next lint",
     "typechain:generate": "yarn typechain --target=ethers-v5 ./src/abi/*.json --out-dir=./gen/types"

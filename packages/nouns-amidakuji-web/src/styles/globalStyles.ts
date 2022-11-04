@@ -37,6 +37,7 @@ export const GlobalStyles = createGlobalStyle`
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: rgb(213, 215, 225);
   }
 
   code {

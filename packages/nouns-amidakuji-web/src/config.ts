@@ -3,47 +3,24 @@ import { ChainId } from '@usedapp/core';
 interface AppConfig {
   jsonRpcUri: string;
   wsRpcUri: string;
-  subgraphApiUri: string;
-  enableHistory: boolean;
 }
 
-type SupportedChains = ChainId.Hardhat;
-// |ChainId.Mainnet  | ChainId.Goerli;
-
-interface CacheBucket {
-  name: string;
-  version: string;
-}
-
-export const cache: Record<string, CacheBucket> = {
-  seed: {
-    name: 'seed',
-    version: 'v1',
-  },
-  ens: {
-    name: 'ens',
-    version: 'v1',
-  },
-};
-
-export const cacheKey = (
-  bucket: CacheBucket,
-  ...parts: (string | number)[]
-) => {
-  return [bucket.name, bucket.version, ...parts].join('-').toLowerCase();
-};
+type SupportedChains = ChainId.Hardhat | ChainId.Goerli;
+// |ChainId.Mainnet;
 
 export const CHAIN_ID: SupportedChains = parseInt(
-  process.env.REACT_APP_CHAIN_ID ?? '31337'
+  // process.env.REACT_APP_CHAIN_ID ?? '31337'
+  process.env.REACT_APP_CHAIN_ID ?? '5'
 );
 
 const app: Record<SupportedChains, AppConfig> = {
   [ChainId.Hardhat]: {
     jsonRpcUri: 'http://localhost:8545',
     wsRpcUri: 'ws://localhost:8545',
-    subgraphApiUri:
-      'http://localhost:8000/subgraphs/name/nounsdao/nouns-subgraph',
-    enableHistory: process.env.REACT_APP_ENABLE_HISTORY === 'true',
+  },
+  [ChainId.Goerli]: {
+    jsonRpcUri: 'https://goerli.infura.io/v3/948608d585514a4e8f3faf6b29e21fda',
+    wsRpcUri: 'wss://goerli.infura.io/ws/v3/948608d585514a4e8f3faf6b29e21fda',
   },
 };
 
@@ -56,6 +33,6 @@ export default config;
 
 // TODO
 export const amidakujiContractAddr =
-  '0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1';
+  '0x5B5be8b74f78f13aB568483b732Db29497629F8b';
 export const amidakujiSBTContractAddr =
-  '0x59b670e9fA9D0A427751Af201D676719a970857b';
+  '0xCEDA107cD2766833c29e7FB8d861f2Fb511251df';
