@@ -114,10 +114,8 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
         )
       ) : (
         <Dropdown
-          className={clsx(
-            navDropdownClasses.nounsNavLink,
-            responsiveUiUtilsClasses.desktopOnly
-          )}
+          className={clsx(navDropdownClasses.nounsNavLink)}
+          show={buttonUp}
           onToggle={() => setButtonUp(!buttonUp)}
         >
           <Dropdown.Toggle

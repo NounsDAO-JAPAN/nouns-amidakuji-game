@@ -537,11 +537,11 @@ const ActivityRow = styled(Row)`
 `;
 
 const NavArrowsContainer = styled.div`
-  position: absolute;
+  display: flex;
+  justify-content: center;
 `;
 
 const AuctionActivityDateHeadlineWrapper = styled.div`
-  margin-left: 5rem;
   width: auto;
 `;
 
