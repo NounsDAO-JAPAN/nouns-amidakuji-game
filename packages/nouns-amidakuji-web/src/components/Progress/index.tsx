@@ -63,7 +63,7 @@ const _Progress = styled.div<Omit<ProgressProps, 'isProgress'>>`
   width: ${(props) => props.size};
   height: ${(props) => props.size};
   border-radius: 50%;
-  border: solid 4px ${(props) => props.baseColor};
+  border: solid ${(props) => props.borderWidth} ${(props) => props.baseColor};
   border-top-color: ${(props) => props.accentColor};
   border-left-color: ${(props) => props.accentColor};
   animation: ${rotate} ${(props) => props.loopTime} infinite linear;
