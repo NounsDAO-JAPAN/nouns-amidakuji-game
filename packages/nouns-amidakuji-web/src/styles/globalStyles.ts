@@ -29,6 +29,8 @@ export const GlobalStyles = createGlobalStyle`
     --brand-color-red-translucent: rgba(214, 60, 94, 0.1);
     --brand-color-blue-translucent: rgba(73, 101, 240, 0.1);
     --brand-color-green-translucent: rgba(67, 179, 105, 0.1);
+    --game-title-lg: 4.25rem;
+    --game-title: 3rem;
   }
   
   body {

@@ -115,8 +115,7 @@
       "yarn workspace @scaffold-eth/solidity lint --fix",
       "yarn workspace @scaffold-eth/solidity format"
     ],
-    "packages/solidity-ts/**/*.sol": [
-    ]
+    "packages/solidity-ts/**/*.sol": []
   },
   "volta": {
     "node": "16.15.0"

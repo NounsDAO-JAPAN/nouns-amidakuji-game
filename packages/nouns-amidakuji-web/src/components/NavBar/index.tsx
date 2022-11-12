@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <>
       <NavBarCustom expand="xl" expanded={isNavExpanded}>
-        <Container style={{ maxWidth: 'unset' }}>
+        <Container>
           <BrandAndTreasuryWrapper>
             <NavBarBrand to="/">
               <NavBarLogo src="/logo.svg" alt="Nouns DAO logo" />
