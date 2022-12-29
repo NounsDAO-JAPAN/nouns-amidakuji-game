@@ -50,7 +50,7 @@ export const WrappedProgress = ({
     <Wrapper wrapper={wrapper}>
       <Progress {...props} isProgress />
       {transaction && (
-        <TransactionLink href={`https://polygonscan.com/tx/${transaction}`}>
+        <TransactionLink href={`https://goerli.etherscan.io/tx/${transaction}`}>
           {transaction}
         </TransactionLink>
       )}

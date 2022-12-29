@@ -46,8 +46,8 @@ const NavWallet: React.FC<NavWalletProps> = (props) => {
 
   useEffect(() => {
     if (check) {
-      if (chainId !== ChainId.Polygon) {
-        switchNetwork(ChainId.Polygon).then(() => {
+      if (chainId !== ChainId.Goerli) {
+        switchNetwork(ChainId.Goerli).then(() => {
           location.reload();
         });
       }

@@ -1,33 +1,24 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { GlobalStyles } from '../src/styles';
 import type { AppProps } from 'next/app';
-import { ChainId, DAppProvider, DEFAULT_SUPPORTED_CHAINS } from '@usedapp/core';
+import { ChainId, DAppProvider } from '@usedapp/core';
 import { RecoilRoot } from 'recoil';
 import Head from 'next/head';
-import React, { useEffect } from 'react';
-
-const myNetworks = [...DEFAULT_SUPPORTED_CHAINS];
-const polygon = myNetworks.find((chain) => chain.chainId === ChainId.Polygon);
+import React from 'react';
 
 const useDappConfig = {
   // readOnlyChainId: ChainId.Hardhat,
-  // readOnlyChainId: ChainId.Goerli,
-  readOnlyChainId: ChainId.Polygon,
+  readOnlyChainId: ChainId.Goerli,
+  // readOnlyChainId: ChainId.Polygon,
   readOnlyUrls: {
     // [ChainId.Hardhat]: 'http://localhost:8545',
-    [ChainId.Polygon]:
-      'https://polygon-mainnet.infura.io/v3/948608d585514a4e8f3faf6b29e21fda',
+    [ChainId.Goerli]:
+      'https://goerli.infura.io/v3/948608d585514a4e8f3faf6b29e21fda',
     // [ChainId.Mainnet]: 'http://localhost:8545',
   },
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
-  useEffect(() => {
-    if (polygon) {
-      polygon.rpcUrl = 'https://polygon-rpc.com/';
-    }
-  }, []);
-
   return (
     <RecoilRoot>
       <Head>
