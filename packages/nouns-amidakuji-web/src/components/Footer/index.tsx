@@ -7,10 +7,17 @@ export const Footer = () => {
     <StyledFooter>
       <div>
         <Link
-          href="https://komorebi88.notion.site/Nouns-Amidakuji-7e07778d1c3c41a0a757fecacb665230"
+          href="https://komorebi88.notion.site/Nouns-Amidakuji-Doc-013cb4258e7349919961e9e6e68732b9"
           target="_blank"
         >
-          Docs is here
+          Doc(EN)
+        </Link>
+        <Link
+          href="https://komorebi88.notion.site/Nouns-Amidakuji-7e07778d1c3c41a0a757fecacb665230"
+          target="_blank"
+          style={{ marginLeft: 8 }}
+        >
+          Doc(JP)
         </Link>
       </div>
       {`© ${new Date().getFullYear()} NounsDAO JAPAN`}
